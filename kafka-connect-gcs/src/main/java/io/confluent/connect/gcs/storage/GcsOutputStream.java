@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import io.confluent.connect.gcs.GcsSinkConnectorConfig;
@@ -97,7 +98,13 @@ public class GcsOutputStream extends OutputStream {
       multiPartUpload = newMultipartUpload();
     }
     try {
-      multiPartUpload.uploadPart(buffer.array());
+      // Flip the buffer into read state (buffer limit to current append position, append position to start of buffer)
+      buffer.flip();
+      int size = buffer.limit();
+      byte[] data = new byte[size];
+
+      buffer.get(data);
+      multiPartUpload.uploadPart(data);
     } catch (Exception e) {
       if (multiPartUpload != null) {
         multiPartUpload.abort();
@@ -158,8 +165,8 @@ public class GcsOutputStream extends OutputStream {
 
     public MultipartUpload() {
       this.uploadId = BlobId.of(bucket, key);
-      this.parts = new ArrayList<>();
-      this.partChecksums = new ArrayList<>();
+      this.parts = new LinkedList<>();
+      this.partChecksums = new LinkedList<>();
       log.debug(
           "Initiated multi-part upload for bucket '{}' key '{}' with id '{}'",
           bucket,

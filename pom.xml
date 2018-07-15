@@ -69,8 +69,14 @@
     <repositories>
         <repository>
             <id>confluent</id>
-            <name>Confluent</name>
-            <url>${confluent.maven.repo}</url>
+            <url>http://packages.confluent.io/maven/</url>
+            <!-- TODO: REMOVE BEFORE MERGE -->
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 

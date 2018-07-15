@@ -51,6 +51,9 @@ public class GcsSinkConnectorConfig extends StorageSinkConnectorConfig {
   // GCS Group
   public static final String GCS_BUCKET_CONFIG = "gcs.bucket.name";
 
+  public static final String GCS_REGION_CONFIG = "gcs.region";
+  public static final String GCS_REGION_DEFAULT = "us-east4";
+
   public static final String PART_SIZE_CONFIG = "gcs.part.size";
   public static final int PART_SIZE_DEFAULT = 25 * 1024 * 1024;
 
@@ -73,10 +76,6 @@ public class GcsSinkConnectorConfig extends StorageSinkConnectorConfig {
   public static final Password GCS_PROXY_PASS_DEFAULT = new Password(null);
 
   private final String name;
-
-  private final StorageCommonConfig commonConfig;
-  private final HiveConfig hiveConfig;
-  private final PartitionerConfig partitionerConfig;
 
   private final Map<String, ComposableConfig> propertyToConfig = new HashMap<>();
   private final Set<AbstractConfig> allConfigs = new HashSet<>();
@@ -128,16 +127,27 @@ public class GcsSinkConnectorConfig extends StorageSinkConnectorConfig {
       );
 
       configDef.define(
+              GCS_REGION_CONFIG,
+              Type.STRING,
+              Importance.HIGH,
+              "The GCS Bucket Region.",
+              group,
+              ++orderInGroup,
+              Width.LONG,
+              "GCS Bucket Region"
+      );
+
+      configDef.define(
           PART_SIZE_CONFIG,
           Type.INT,
           PART_SIZE_DEFAULT,
           new PartRange(),
           Importance.HIGH,
-          "The Part Size in GCS Multi-part Uploads.",
+          "The Part Size in GCS Multi-part Uploads (bytes).",
           group,
           ++orderInGroup,
           Width.LONG,
-          "GCS Part Size"
+          "GCS Part Size (bytes)"
       );
 
       configDef.define(
@@ -242,11 +252,15 @@ public class GcsSinkConnectorConfig extends StorageSinkConnectorConfig {
 
   protected GcsSinkConnectorConfig(ConfigDef configDef, Map<String, String> props) {
     super(configDef, props);
-    ConfigDef storageCommonConfigDef = StorageCommonConfig.newConfigDef(STORAGE_CLASS_RECOMMENDER);
-    commonConfig = new StorageCommonConfig(storageCommonConfigDef, originalsStrings());
-    hiveConfig = new HiveConfig(originalsStrings());
-    ConfigDef partitionerConfigDef = PartitionerConfig.newConfigDef(PARTITIONER_CLASS_RECOMMENDER);
-    partitionerConfig = new PartitionerConfig(partitionerConfigDef, originalsStrings());
+    final ConfigDef storageCommonConfigDef = StorageCommonConfig.newConfigDef(
+            STORAGE_CLASS_RECOMMENDER);
+    final StorageCommonConfig commonConfig = new StorageCommonConfig(storageCommonConfigDef,
+            originalsStrings());
+    final HiveConfig hiveConfig = new HiveConfig(originalsStrings());
+    final ConfigDef partitionerConfigDef = PartitionerConfig.newConfigDef(
+            PARTITIONER_CLASS_RECOMMENDER);
+    final PartitionerConfig partitionerConfig = new PartitionerConfig(partitionerConfigDef,
+            originalsStrings());
 
     this.name = parseName(originalsStrings());
     addToGlobal(hiveConfig);
@@ -268,6 +282,10 @@ public class GcsSinkConnectorConfig extends StorageSinkConnectorConfig {
 
   public String getBucketName() {
     return getString(GCS_BUCKET_CONFIG);
+  }
+
+  public String getRegion() {
+    return getString(GCS_REGION_CONFIG);
   }
 
   public int getPartSize() {

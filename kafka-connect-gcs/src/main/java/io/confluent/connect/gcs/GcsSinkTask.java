@@ -129,7 +129,6 @@ public class GcsSinkTask extends SinkTask {
     // a call to "close".
     assignment.addAll(partitions);
     for (TopicPartition tp : assignment) {
-      /*
       TopicPartitionWriter writer = new TopicPartitionWriter(
           tp,
           writerProvider,
@@ -139,7 +138,6 @@ public class GcsSinkTask extends SinkTask {
           time
       );
       topicPartitionWriters.put(tp, writer);
-      */
     }
   }
 

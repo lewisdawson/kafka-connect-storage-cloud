@@ -38,18 +38,36 @@ import io.confluent.kafka.serializers.NonRecordContainer;
 public class AvroRecordWriterProvider implements RecordWriterProvider<GcsSinkConnectorConfig> {
 
   private static final Logger log = LoggerFactory.getLogger(AvroRecordWriterProvider.class);
-  private static final String EXTENSION = ".avro";
+  private static final String BASE_EXTENSION = ".avro";
   private final GcsStorage storage;
   private final AvroData avroData;
+  private String extension;
 
   AvroRecordWriterProvider(GcsStorage storage, AvroData avroData) {
     this.storage = storage;
     this.avroData = avroData;
+
+    init();
+  }
+
+  private void init() {
+    String codecPrefix = "";
+    String confCodec = storage.conf().getAvroCodec();
+
+    switch (confCodec) {
+      case "snappy":
+      case "bzip2":
+      case "deflate":
+        codecPrefix = "." + confCodec;
+        break;
+    }
+
+    extension = codecPrefix + BASE_EXTENSION;
   }
 
   @Override
   public String getExtension() {
-    return EXTENSION;
+    return extension;
   }
 
   @Override
