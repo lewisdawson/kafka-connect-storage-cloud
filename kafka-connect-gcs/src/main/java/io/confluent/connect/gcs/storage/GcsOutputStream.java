@@ -193,6 +193,22 @@ public class GcsOutputStream extends OutputStream {
       // as crc32 and other in the future.
       BlobInfo composeReq = BlobInfo.newBuilder(bucket, key).build();
       gcs.compose(Storage.ComposeRequest.of(parts, composeReq));
+
+      List<BlobId> blobInfoList = new ArrayList<>(parts.size());
+      for (String part : parts) {
+          blobInfoList.add(BlobId.of(bucket, part));
+      }
+      // Remove all of the parts
+      // TODO: make this a configurable option whether to remove parts or not
+      List<Boolean> deleteResultList = gcs.delete(blobInfoList);
+      int i = 0;
+      for(Boolean deleteResult : deleteResultList) {
+          if(!deleteResult) {
+              log.warn("Could not delete uploaded part {} for id '{}'",
+                      blobInfoList.get(i).getName(), uploadId);
+          }
+          i += 1;
+      }
     }
 
     public void abort() {
